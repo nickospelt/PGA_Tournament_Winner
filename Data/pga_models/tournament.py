@@ -2,8 +2,9 @@ from pydantic import BaseModel
 from datetime import datetime
 
 class Tournament(BaseModel):
-    id: int
+    id: int # [PK] (from ESPN)
     name: str
+    location: str # [WeatherRecord.location FK]
     start_date: datetime
     end_date: datetime
     purse: int
