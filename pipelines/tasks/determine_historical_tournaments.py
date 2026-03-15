@@ -1,5 +1,5 @@
 import os
-import sqlite3
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from typing import Dict, Any, Optional, Set
@@ -10,48 +10,43 @@ class DetermineHistoricalTournamentsTask(Task):
     Scrapes the ESPN schedule for a given year and identifies new tournaments.
 
     This task fetches the schedule for a specific season and compares the 
-    found tournament IDs against those already stored in the database.
+    found tournament IDs against those already stored in the Parquet dataset.
 
     Attributes:
         year (int): The PGA season year to scrape (e.g., 2024).
-        db_path (str): Path to the SQLite database file.
     """
 
-    def __init__(self, name: str, year: int, db_path: str):
+    def __init__(self, name: str, year: int):
         """
         Initializes the DetermineHistoricalTournamentsTask.
 
         Args:
             name (str): The name of the task.
             year (int): The season year to scrape.
-            db_path (str): The path to the SQLite database.
         """
         super().__init__(name)
         self.year = year
-        self.db_path = db_path
+        self.tournaments_path = "data/pga/raw/tournaments/data.parquet"
 
     def _get_existing_tournament_ids(self) -> Set[int]:
         """
-        Retrieves the set of tournament IDs already present in the database.
+        Retrieves the set of tournament IDs already present in the Parquet storage.
 
         Returns:
             Set[int]: A set of integer tournament IDs. Returns an empty set if 
-                the database or table does not exist.
+                the file does not exist.
         """
-        if not os.path.exists(self.db_path):
+        if not os.path.exists(self.tournaments_path):
             return set()
         
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
         try:
-            cursor.execute("SELECT id FROM tournaments")
-            ids = {row[0] for row in cursor.fetchall()}
-            return ids
-        except sqlite3.OperationalError:
-            # Table might not exist yet
+            df = pd.read_parquet(self.tournaments_path)
+            if "id" in df.columns:
+                return set(df["id"].tolist())
             return set()
-        finally:
-            conn.close()
+        except Exception as e:
+            print(f"Error reading existing tournaments: {e}")
+            return set()
 
     def execute(self, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -62,7 +57,7 @@ class DetermineHistoricalTournamentsTask(Task):
 
         Returns:
             Optional[Dict[str, Any]]: A dictionary containing 'tournament_ids' 
-                found for the year that are not already in the database.
+                found for the year that are not already in storage.
         """
         url = f"https://www.espn.com/golf/schedule/_/season/{self.year}"
         print(f"Fetching schedule from: {url}")

@@ -10,21 +10,16 @@ class DetermineCurrentTournamentsTask(Task):
 
     This task checks the ESPN schedule for the current date and extracts 
     IDs for tournaments currently in progress or the next scheduled event.
-
-    Attributes:
-        db_path (str): Path to the SQLite database file.
     """
 
-    def __init__(self, name: str, db_path: str):
+    def __init__(self, name: str):
         """
         Initializes the DetermineCurrentTournamentsTask.
 
         Args:
             name (str): The name of the task.
-            db_path (str): The path to the SQLite database.
         """
         super().__init__(name)
-        self.db_path = db_path
 
     def execute(self, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """

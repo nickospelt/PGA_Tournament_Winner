@@ -1,5 +1,10 @@
 # PGA Tournament Winner Prediction
 
+## Data Philosophy
+- Data pipelines gather data
+- Models create predictions
+- Agents make decisions and take action
+
 ## Overview:
 The motivation behind this project is to determine the chance a designated player has to win a specified tournament.
 Currently, the model considers a variety of tournaments spanning 2017-2024.
